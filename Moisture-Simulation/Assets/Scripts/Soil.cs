@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
+
+public enum MoistureState
+{
+    DRY,
+    DRYING,
+    MOIST,
+    WET,
+}
 public class Soil
 {
-    public enum MoistureState
-    {
-        DRY,
-        DRYING,
-        MOIST,
-        WET,
-    }
     public enum RadiationState
     {
         NOT_RADITATED,
