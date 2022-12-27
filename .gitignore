@@ -61,3 +61,6 @@ crashlytics-build.properties
 # Ignore Mac Dependencies
 **/.DS_Store
 
+Moisture-Simulation/Library/SceneVisibilityState.asset
+Moisture-Simulation/Library/SourceAssetDB
+Moisture-Simulation/Temp/FSTimeGet-9d376c4c546884750a07e18a997c9f48
