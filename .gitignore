@@ -2,13 +2,13 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/master/Unity.gitignore
 #
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Mm]emoryCaptures/
+/Moisture-Simulation/[Ll]ibrary/
+/Moisture-Simulation/[Tt]emp/
+/Moisture-Simulation/[Oo]bj/
+/Moisture-Simulation/[Bb]uild/
+/Moisture-Simulation/[Bb]uilds/
+/Moisture-Simulation/[Ll]ogs/
+/Moisture-Simulation/[Mm]emoryCaptures/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
@@ -61,8 +61,3 @@ crashlytics-build.properties
 # Ignore Mac Dependencies
 **/.DS_Store
 
-Moisture-Simulation/Library/SceneVisibilityState.asset
-Moisture-Simulation/Library/SourceAssetDB
-Moisture-Simulation/Temp/FSTimeGet-9d376c4c546884750a07e18a997c9f48
-Moisture-Simulation/Library/ShaderCache/EditorEncounteredVariants
-Moisture-Simulation/Logs/shadercompiler-UnityShaderCompiler0.log
