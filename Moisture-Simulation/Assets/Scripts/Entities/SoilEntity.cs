@@ -13,10 +13,19 @@ using Unity.Entities.UniversalDelegates;
 
 public class SoilEntity : MonoBehaviour
 {
-    [SerializeField] Mesh mesh;
-    [SerializeField] Material material;
+    [SerializeField] Mesh soilMesh;
+    [SerializeField] Mesh rainMesh;
+    [SerializeField] Material soilMaterial;
+    [SerializeField] Material rainMaterial;
     [SerializeField] private int width = 10;
     [SerializeField] private Texture2D _texture;
+
+
+    private enum EntityType
+    {
+        SOIL,
+        CLOUD
+    }
     public bool rain = false;
     public static Entity[,] soilEntities;
     public static SoilEntity Instance;
@@ -27,6 +36,8 @@ public class SoilEntity : MonoBehaviour
     }
     EntityManager entityManager;
     EntityArchetype soilArchetype;
+    private EntityArchetype rainArchetype;
+
     private void Awake()
     {
         if (Instance == null)
@@ -41,17 +52,34 @@ public class SoilEntity : MonoBehaviour
     [BurstCompatible]
     private void Start()
     {
-        soilEntities = new Entity[width, width];
-        material.color = new Color(1, 0, 0);
+        //soilEntities = new Entity[width, width];
+        //material.color = new Color(1, 0, 0);
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        soilArchetype = entityManager.CreateArchetype(typeof(SoilComponent), typeof(RenderMesh), typeof(RenderBounds), typeof(Translation), typeof(Scale), typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
-        NativeArray<Entity> entityArr = new NativeArray<Entity>(10000, Allocator.Temp);
 
-        entityManager.CreateEntity(soilArchetype, entityArr);
-        MeshRenderer _mesh = GetComponent<MeshRenderer>();
-        float entScale = _mesh.bounds.size.x / (width * mesh.bounds.size.x);
+        soilArchetype = entityManager.CreateArchetype(typeof(SoilComponent), typeof(RenderMesh),
+                                                        typeof(RenderBounds), typeof(Translation),
+                                                        typeof(Scale), typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
+
+        rainArchetype = entityManager.CreateArchetype(typeof(RainComponent),typeof(RenderMesh),
+                                                        typeof(RenderBounds), typeof(Translation),
+                                                        typeof(Scale), typeof(LocalToWorld), typeof(URPMaterialPropertyBaseColor));
+
+        soilEntities = GenerateEntityArray(soilArchetype, width, 0f, soilMaterial, soilMesh, EntityType.SOIL);
+        GenerateEntityArray(rainArchetype, width, 5f, rainMaterial, rainMesh, EntityType.CLOUD);
+
+        rain = true;
+    }
+
+    private Entity[,] GenerateEntityArray(EntityArchetype entityArchetype, int dimension, float yPos, Material material, Mesh mesh, EntityType type)
+    {
+        Entity[,] entityArray = new Entity[dimension, dimension];
+        NativeArray<Entity> entityArr = new NativeArray<Entity>(10000, Allocator.Temp);
         int i = 0;
         int j = 0;
+        MeshRenderer _mesh = GetComponent<MeshRenderer>();
+
+        entityManager.CreateEntity(entityArchetype, entityArr);
+        float entScale = _mesh.bounds.size.x / (width * mesh.bounds.size.x);
         int2 pos;
         foreach (Entity entity in entityArr)
         {
@@ -65,55 +93,31 @@ public class SoilEntity : MonoBehaviour
                 break;
             }
             pos = new int2(i, j);
-            entityManager.SetComponentData(entity, new Translation { Value = GridPosition(pos, mesh.bounds.size.x * entScale) });
+            entityManager.SetComponentData(entity, new Translation { Value = GridPosition(pos, mesh.bounds.size.x * entScale, yPos) });
             entityManager.SetComponentData(entity, new Scale { Value = entScale });
-            entityManager.SetComponentData(entity, new SoilComponent { moistureLevel = UnityEngine.Random.Range(0, 1f), position = pos });
+            switch (type)
+            {
+                case EntityType.SOIL:
+                    entityManager.SetComponentData(entity, new SoilComponent { moistureLevel = UnityEngine.Random.Range(0, 1f), position = pos });
+                    break;
+                case EntityType.CLOUD:
+                    entityManager.SetComponentData(entity, new RainComponent { position = pos });
+                    break;
+            }
             RenderMeshUtility.AddComponents(entity, entityManager, new RenderMeshDescription(mesh, material));
 
-            soilEntities[i, j] = entity;
+            entityArray[i, j] = entity;
             j++;
         }
         entityArr.Dispose();
-        rain = true;
+        return entityArray;
     }
-    private float3 GridPosition(int2 position, float3 soilSize)
+
+    private float3 GridPosition(int2 position, float3 soilSize, float yPos)
     {
         float x = position.x * soilSize.x + (0.5f * soilSize.x);
         float z = position.y * soilSize.z + (0.5f * soilSize.z);
-        return new float3(x, 0, z);
-    }
-    private NativeArray<Entity> FindNeighbours(int2 pos)
-    {
-        int size = 0;
-        if (pos.x > 0)
-            size++;
-        if(pos.x < soilEntities.GetLength(0) - 1)
-            size++;
-        if (pos.y > 0)
-            size++;
-        if(pos.y < soilEntities.GetLength(0) - 1)
-            size++;
-
-        
-        NativeArray<Entity> entities = new NativeArray<Entity>(size, Allocator.Persistent);
-        int i = 0;
-        if (pos.x > 0)
-        {
-            entities[i++] = soilEntities[pos.x - 1, pos.y];
-        }
-        if (pos.y > 0)
-        {
-            entities[i++] = soilEntities[pos.x, pos.y - 1];
-        }
-        if (pos.x < soilEntities.GetLength(0) - 1)
-        {
-            entities[i++] = soilEntities[pos.x + 1, pos.y];
-        }
-        if (pos.y < soilEntities.GetLength(1) - 1)
-        {
-            entities[i++] = soilEntities[pos.x, pos.y + 1];
-        }
-        return entities;
+        return new float3(x, yPos, z);
     }
 
 }
